@@ -1,0 +1,9 @@
+pyautogui
+pillow
+mss
+psutil
+pygetwindow
+pywin32
+# Optional: install manually if you want richer image comparisons.
+# opencv-python
+# imagehash

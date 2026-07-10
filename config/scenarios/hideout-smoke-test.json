@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "name": "hideout-smoke-test",
+  "description": "Capture a few screenshots in hideout or main menu without buying, selling, deleting, moving items, or destructive actions.",
+  "requiresComputerUse": true,
+  "requiresKeyboardMouseInput": true,
+  "requiresClientLaunch": false,
+  "allowRaidAutomation": false,
+  "maxSeconds": 60,
+  "maxInputActions": 8,
+  "steps": [
+    { "action": "wait", "condition": "wait_for_window", "timeoutSeconds": 30 },
+    { "action": "screenshot", "label": "start" },
+    { "action": "wait", "seconds": 2 },
+    { "action": "screenshot", "label": "after-wait" },
+    { "action": "press", "key": "esc" },
+    { "action": "screenshot", "label": "after-esc" },
+    { "action": "collect_logs" },
+    { "action": "analyze_logs" }
+  ]
+}

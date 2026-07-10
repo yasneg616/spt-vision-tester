@@ -1,0 +1,42 @@
+{
+  "SptRoot": "D:\\path\\to\\SPT",
+  "ServerExe": "",
+  "LauncherExe": "",
+  "ClientExe": "",
+  "ServerUrl": "http://127.0.0.1:6969",
+  "AllowClientLaunch": false,
+  "AllowComputerUse": false,
+  "AllowKeyboardMouseInput": false,
+  "AllowRaidAutomation": false,
+  "AllowTextInput": false,
+  "OpenLauncherInsteadOfClient": true,
+  "AllowedProcessNames": [
+    "SPT.Server.exe",
+    "Aki.Server.exe",
+    "SPT.Launcher.exe",
+    "Aki.Launcher.exe",
+    "EscapeFromTarkov.exe"
+  ],
+  "DeniedProcessNames": [
+    "BsgLauncher.exe",
+    "Battlestate Games Launcher.exe",
+    "EscapeFromTarkov_BE.exe",
+    "BEService.exe",
+    "BEService_x64.exe"
+  ],
+  "StartupTimeoutSeconds": 90,
+  "ClientBootTimeoutSeconds": 240,
+  "ScenarioMaxSeconds": 180,
+  "MaxInputActions": 80,
+  "ScreenshotIntervalMs": 1000,
+  "EmergencyStopHotkey": "ctrl+alt+pause",
+  "ArtifactsRoot": ".spt-vision-tester\\runs",
+  "LogGlobs": [
+    "BepInEx\\LogOutput.log",
+    "BepInEx\\*.log",
+    "Logs\\*.log",
+    "logs\\*.log",
+    "user\\logs\\*.log",
+    "SPT_Data\\Server\\logs\\*.log"
+  ]
+}

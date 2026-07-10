@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "name": "boot-to-main-menu",
+  "description": "Wait for launcher/client stability, screenshot, collect logs, and analyze boot errors without entering credentials.",
+  "requiresComputerUse": false,
+  "requiresKeyboardMouseInput": false,
+  "requiresClientLaunch": false,
+  "allowRaidAutomation": false,
+  "maxSeconds": 180,
+  "maxInputActions": 0,
+  "steps": [
+    { "action": "wait", "condition": "wait_for_window", "timeoutSeconds": 120 },
+    { "action": "wait", "condition": "wait_for_stable_image", "seconds": 5 },
+    { "action": "screenshot", "label": "stable-window" },
+    { "action": "collect_logs" },
+    { "action": "analyze_logs" }
+  ]
+}

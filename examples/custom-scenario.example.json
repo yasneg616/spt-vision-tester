@@ -1,0 +1,28 @@
+{
+  "$schema": "../config/scenarios/spt-vision-scenario.schema.json",
+  "schemaVersion": 1,
+  "name": "custom-launcher-focus-check",
+  "description": "Launch the configured local SPT launcher, capture evidence, exercise bounded keyboard navigation, and collect logs.",
+  "requiresComputerUse": true,
+  "requiresKeyboardMouseInput": true,
+  "requiresClientLaunch": true,
+  "allowRaidAutomation": false,
+  "maxSeconds": 120,
+  "maxInputActions": 4,
+  "notes": [
+    "Run only against a configured local SPT offline installation.",
+    "Review every step and keep the SPT window in the foreground."
+  ],
+  "steps": [
+    { "action": "wait", "condition": "wait_for_window", "timeoutSeconds": 90 },
+    { "action": "focus_target_window" },
+    { "action": "screenshot", "label": "launcher-before-navigation" },
+    { "action": "press", "key": "tab" },
+    { "action": "wait", "seconds": 1 },
+    { "action": "screenshot", "label": "launcher-after-tab" },
+    { "action": "press", "key": "tab" },
+    { "action": "screenshot", "label": "launcher-after-second-tab" },
+    { "action": "collect_logs" },
+    { "action": "analyze_logs" }
+  ]
+}

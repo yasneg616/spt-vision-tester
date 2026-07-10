@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "name": "manual-raid-movement-test",
+  "description": "User manually enters a local raid first; the tester performs small bounded movement and screenshots.",
+  "requiresComputerUse": true,
+  "requiresKeyboardMouseInput": true,
+  "requiresClientLaunch": false,
+  "requiresManualRaidEntry": true,
+  "allowRaidAutomation": false,
+  "maxSeconds": 45,
+  "maxInputActions": 12,
+  "steps": [
+    { "action": "screenshot", "label": "before-movement" },
+    { "action": "hold", "key": "w", "seconds": 1.0 },
+    { "action": "hold", "key": "a", "seconds": 0.5 },
+    { "action": "hold", "key": "d", "seconds": 0.5 },
+    { "action": "move_mouse_relative", "x": 40, "y": 0 },
+    { "action": "move_mouse_relative", "x": -40, "y": 0 },
+    { "action": "screenshot", "label": "after-movement" },
+    { "action": "press", "key": "esc" },
+    { "action": "collect_logs" },
+    { "action": "analyze_logs" }
+  ]
+}

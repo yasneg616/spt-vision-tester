@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "name": "launcher-smoke-test",
+  "description": "Open configured SPT launcher, screenshot it, and check for obvious error states without clicking login or account controls.",
+  "requiresComputerUse": false,
+  "requiresKeyboardMouseInput": false,
+  "requiresClientLaunch": false,
+  "allowRaidAutomation": false,
+  "maxSeconds": 120,
+  "maxInputActions": 0,
+  "steps": [
+    { "action": "wait", "condition": "wait_for_window", "timeoutSeconds": 90 },
+    { "action": "screenshot", "label": "launcher-visible" },
+    { "action": "collect_logs" },
+    { "action": "analyze_logs" }
+  ]
+}

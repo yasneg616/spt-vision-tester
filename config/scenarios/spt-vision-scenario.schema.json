@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/yasneg616/spt-vision-tester/blob/main/config/scenarios/spt-vision-scenario.schema.json",
+  "title": "SPT Vision Tester Scenario",
+  "description": "Version 1 format for bounded local SPT offline UI actions. The bundled validator applies additional action-specific safety checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "name",
+    "description",
+    "requiresComputerUse",
+    "requiresKeyboardMouseInput",
+    "requiresClientLaunch",
+    "allowRaidAutomation",
+    "maxSeconds",
+    "maxInputActions",
+    "steps"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "requiresComputerUse": {
+      "type": "boolean"
+    },
+    "requiresKeyboardMouseInput": {
+      "type": "boolean"
+    },
+    "requiresClientLaunch": {
+      "type": "boolean"
+    },
+    "requiresManualRaidEntry": {
+      "type": "boolean"
+    },
+    "allowRaidAutomation": {
+      "type": "boolean"
+    },
+    "maxSeconds": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 1800
+    },
+    "maxInputActions": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 300
+    },
+    "notes": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": {
+        "$ref": "#/$defs/step"
+      }
+    }
+  },
+  "$defs": {
+    "key": {
+      "enum": [
+        "a", "alt", "b", "backspace", "c", "ctrl", "d", "delete", "down", "e", "end", "enter", "esc", "f",
+        "f1", "f2", "f3", "f4", "f5", "f6", "f7", "f8", "f9", "f10", "f11", "f12", "g", "home", "left",
+        "m", "n", "pagedown", "pageup", "q", "r", "right", "s", "shift", "space", "tab", "up", "v", "w", "x", "z"
+      ]
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action"],
+      "properties": {
+        "action": {
+          "enum": [
+            "analyze_logs",
+            "click_center",
+            "click_window_percent",
+            "collect_logs",
+            "double_click_window_percent",
+            "focus_target_window",
+            "hold",
+            "move_mouse_relative",
+            "press",
+            "press_sequence",
+            "screenshot",
+            "wait"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "condition": {
+          "enum": [
+            "wait_for_log_quiet",
+            "wait_for_seconds",
+            "wait_for_stable_image",
+            "wait_for_window"
+          ]
+        },
+        "timeoutSeconds": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 300
+        },
+        "seconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 300
+        },
+        "key": {
+          "$ref": "#/$defs/key"
+        },
+        "keys": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/$defs/key"
+          }
+        },
+        "intervalSeconds": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "x": {
+          "type": "integer",
+          "minimum": -1000,
+          "maximum": 1000
+        },
+        "y": {
+          "type": "integer",
+          "minimum": -1000,
+          "maximum": 1000
+        },
+        "xPercent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "yPercent": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "enum": ["press", "hold"]
+              }
+            }
+          },
+          "then": {
+            "required": ["key"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "const": "hold"
+              }
+            }
+          },
+          "then": {
+            "required": ["seconds"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "const": "press_sequence"
+              }
+            }
+          },
+          "then": {
+            "required": ["keys"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "const": "move_mouse_relative"
+              }
+            }
+          },
+          "then": {
+            "required": ["x", "y"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "action": {
+                "enum": ["click_window_percent", "double_click_window_percent"]
+              }
+            }
+          },
+          "then": {
+            "required": ["xPercent", "yPercent"]
+          }
+        }
+      ]
+    }
+  }
+}

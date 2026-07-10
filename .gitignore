@@ -1,0 +1,25 @@
+# Local runtime and generated artifacts
+.spt-vision-tester/
+.venv/
+**/__pycache__/
+*.py[cod]
+*.log
+.pytest_cache/
+.mypy_cache/
+
+# Private machine configuration
+config/spt-vision-config.json
+config/*.local.json
+config/scenarios/*.local.json
+examples/*.local.json
+.env
+.env.*
+
+# Workspace-specific scenarios retained locally but not published
+config/scenarios/tkf-*.json
+
+# Editor and OS files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
