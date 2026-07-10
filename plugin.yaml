@@ -1,5 +1,5 @@
 name: spt-vision-tester
-version: 0.3.0
+version: 0.3.1
 description: Local-only Codex plugin for target-monitor SPT offline visual tests, Computer Use sessions, bounded scenarios, screenshots, logs, and analysis.
 included_skill:
   - skills/spt-vision-tester/SKILL.md
@@ -45,7 +45,7 @@ safety_notes:
   - Scenario JSON cannot execute shell commands, arbitrary paths, text entry, or clipboard operations.
   - Treat third-party scenarios as untrusted and review every coordinate and key before running.
   - Monitor binding constrains SPT window placement but does not isolate Windows keyboard focus or mouse input.
-  - Cooperative desktop mode waits for user inactivity and stops on focus interference; it cannot guarantee simultaneous input safety.
+  - Cooperative desktop mode defers interrupted focus-only handoffs but stops on interference during clicks, keys, or movement; it cannot guarantee simultaneous input safety.
   - Use a VM, separate interactive Windows session, or another machine for true concurrent desktop control.
   - Stop only PIDs recorded by this plugin.
 required_permissions:

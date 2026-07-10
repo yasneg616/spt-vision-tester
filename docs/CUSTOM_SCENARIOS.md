@@ -93,7 +93,7 @@ If the scenario declares `requiresClientLaunch=true`, also pass `-LaunchClient`.
 Copy one of the tested built-ins instead of starting from a blank file:
 
 - Normal local offline raid: `config/scenarios/auto-offline-raid-smoke-test.json`
-- Local offline raid with AI amount set to none and bosses disabled: `config/scenarios/auto-offline-raid-no-ai-smoke-test.json`
+- Local offline raid with AI amount set to none and verified zero AI counters: `config/scenarios/auto-offline-raid-no-ai-smoke-test.json`
 
 Keep `allowRaidAutomation=true` only for a reviewed local offline route. Percentage coordinates depend on resolution, UI scale, language, game version, and mods. Capture screenshots around every calibrated click and test a server-only run first.
 

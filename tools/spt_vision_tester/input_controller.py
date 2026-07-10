@@ -56,13 +56,23 @@ class InputController:
         if require_foreground:
             assert_foreground_allowed(self.config)
 
-    def _before_after(self, name: str, fn: Any, *, activate_first: bool = False) -> None:
+    def _before_after(
+        self,
+        name: str,
+        fn: Any,
+        *,
+        activate_first: bool = False,
+        injects_input: bool = True,
+        allow_cooperative_interruption: bool = False,
+    ) -> None:
         cooperative = self.config.cooperative_desktop_mode
         self._check_limits(require_foreground=not (cooperative or activate_first))
         context = None
         target = None
         plugin_cursor = None
         plugin_input_tick = None
+        input_tick_before_action = None
+        cooperative_interruptions: set[str] = set()
         if cooperative:
             remaining_seconds = max(0.0, self.max_seconds - (time.monotonic() - self.started))
             if remaining_seconds <= 0:
@@ -74,6 +84,7 @@ class InputController:
                 max_wait_seconds=remaining_seconds,
             )
             context = capture_desktop_context()
+            input_tick_before_action = last_input_tick()
 
         try:
             if cooperative or activate_first:
@@ -83,14 +94,17 @@ class InputController:
             capture_window(self.artifact, self.config, f"before_{name}")
             fn()
             self.actions += 1
-            plugin_input_tick = last_input_tick()
-            self.last_injected_input_tick = plugin_input_tick
-            plugin_cursor = capture_desktop_context().cursor_position
+            if injects_input:
+                plugin_input_tick = last_input_tick()
+                self.last_injected_input_tick = plugin_input_tick
+                plugin_cursor = capture_desktop_context().cursor_position
 
             if cooperative:
                 foreground = active_window()
                 if not foreground or foreground.hwnd != target.hwnd:
-                    raise SafetyViolation("Foreground changed during cooperative input; stopping before another action.")
+                    if not allow_cooperative_interruption:
+                        raise SafetyViolation("Foreground changed during cooperative input; stopping before another action.")
+                    cooperative_interruptions.add("focus_changed")
             time.sleep(0.1)
             try:
                 capture_window(self.artifact, self.config, f"after_{name}")
@@ -99,9 +113,26 @@ class InputController:
             if cooperative:
                 foreground = active_window()
                 if not foreground or foreground.hwnd != target.hwnd:
-                    raise SafetyViolation("User changed focus during cooperative input; stopping before another action.")
-                if plugin_input_tick is not None and last_input_tick() != plugin_input_tick:
+                    if not allow_cooperative_interruption:
+                        raise SafetyViolation("User changed focus during cooperative input; stopping before another action.")
+                    cooperative_interruptions.add("focus_changed")
+                current_input_tick = last_input_tick()
+                if injects_input and plugin_input_tick is not None and current_input_tick != plugin_input_tick:
                     raise SafetyViolation("User input was detected during cooperative action verification; stopping.")
+                if (
+                    not injects_input
+                    and input_tick_before_action is not None
+                    and current_input_tick != input_tick_before_action
+                ):
+                    if not allow_cooperative_interruption:
+                        raise SafetyViolation("User input was detected during cooperative action verification; stopping.")
+                    cooperative_interruptions.add("user_input_detected")
+                if cooperative_interruptions:
+                    self.artifact.append_timeline(
+                        "cooperative_interruption_deferred",
+                        action=name,
+                        reasons=sorted(cooperative_interruptions),
+                    )
             self.artifact.append_timeline("input", action=name, count=self.actions)
         finally:
             if cooperative and context is not None:
@@ -167,7 +198,13 @@ class InputController:
 
     def focus_target_window(self) -> None:
         self.artifact.append_timeline("focus_attempt")
-        self._before_after("focus_target_window", lambda: None, activate_first=True)
+        self._before_after(
+            "focus_target_window",
+            lambda: None,
+            activate_first=True,
+            injects_input=False,
+            allow_cooperative_interruption=True,
+        )
 
     def press_sequence(self, keys: list[str], interval: float = 0.2) -> None:
         for key in keys:

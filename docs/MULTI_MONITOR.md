@@ -85,6 +85,6 @@ Codex should then:
 
 Before each injected action, the runner waits until Windows input has been quiet for `UserIdleSecondsBeforeInput`. Input produced by the preceding plugin action is ignored for this check. If user activity continues for `MaxUserIdleWaitSeconds`, the scenario stops.
 
-After an action, the runner restores the prior foreground window and cursor only if they still match the plugin's expected state. If the user has already changed focus or moved the cursor, the plugin keeps the user's new state and stops before sending another action.
+After an action, the runner restores the prior foreground window and cursor only if they still match the plugin's expected state. If a focus-only handoff is interrupted, the runner keeps the user's new state, records the interruption, and lets the next active action wait for another quiet period. If the user changes focus or input during a click, key, or movement action, the plugin keeps the user's new state and stops before sending another action.
 
 Cooperative mode reduces contention but cannot eliminate the small activation interval around each click or key. Avoid continuous automated movement while actively typing or using the mouse in another app.

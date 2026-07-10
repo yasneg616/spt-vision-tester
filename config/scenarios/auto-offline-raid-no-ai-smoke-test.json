@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "name": "auto-offline-raid-no-ai-smoke-test",
-  "description": "Launch SPT launcher/client, enter an offline Factory raid path, set practice raid AI amount to none, disable bosses, then run bounded movement/log/screenshot checks. Coordinates are calibrated for this workspace and remain percentage-based.",
+  "description": "Launch SPT launcher/client, enter an offline Factory raid path, set practice raid AI amount to none, then run bounded movement/log/screenshot checks. Coordinates are calibrated for this workspace and remain percentage-based.",
   "requiresComputerUse": true,
   "requiresKeyboardMouseInput": true,
   "requiresClientLaunch": true,
@@ -9,9 +9,10 @@
   "maxSeconds": 900,
   "maxInputActions": 200,
   "notes": [
-    "At the practice-mode screen, the gear-labeled 游戏设置 control opens a secondary settings menu.",
+    "At the practice-mode screen, the gear-labeled game settings control opens a secondary settings menu.",
     "Use this variant when you want reduced combat risk while visually testing map loading and movement.",
-    "The no-AI submenu coordinates were verified on the configured SPT 4.0.13 Chinese UI at 2048x1152; use screenshots to recalibrate if resolution, language, or UI changes."
+    "Selecting AI amount None disables dependent spawn controls, so do not click their grayed checkboxes.",
+    "The no-AI submenu coordinates were verified on the configured SPT 4.0.13 Chinese UI at 16:9 resolutions including 2560x1440; use screenshots to recalibrate if aspect ratio, language, or UI changes."
   ],
   "steps": [
     { "action": "wait", "condition": "wait_for_window", "timeoutSeconds": 120 },
@@ -41,9 +42,7 @@
     { "action": "screenshot", "label": "ai-amount-dropdown-open" },
     { "action": "click_window_percent", "xPercent": 0.347, "yPercent": 0.686, "label": "select-ai-none" },
     { "action": "wait", "seconds": 1 },
-    { "action": "click_window_percent", "xPercent": 0.269, "yPercent": 0.674, "label": "disable-bosses" },
-    { "action": "wait", "seconds": 1 },
-    { "action": "screenshot", "label": "verify-ai-none-and-bosses-off" },
+    { "action": "screenshot", "label": "verify-ai-none" },
     { "action": "click_window_percent", "xPercent": 0.755, "yPercent": 0.192, "label": "close-game-settings-submenu" },
     { "action": "wait", "seconds": 1 },
 
@@ -52,7 +51,7 @@
     { "action": "click_window_percent", "xPercent": 0.50, "yPercent": 0.88, "label": "insurance-next" },
     { "action": "wait", "seconds": 2 },
     { "action": "click_window_percent", "xPercent": 0.50, "yPercent": 0.88, "label": "confirm-ready-start-raid" },
-    { "action": "wait", "seconds": 120 },
+    { "action": "wait", "seconds": 150 },
     { "action": "screenshot", "label": "raid-loaded-candidate" },
 
     { "action": "hold", "key": "w", "seconds": 1.0 },

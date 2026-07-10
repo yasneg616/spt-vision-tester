@@ -38,7 +38,7 @@ Use `Get-SptVisionMonitors.ps1` before selecting a display. Index `1` is the pri
 
 For direct Computer Use debugging, start with `Start-SptVisionTest.ps1 -ComputerUseSession`. Then use the Computer Use capability to select only the returned local SPT launcher/client window. Verify that its process path is under configured `SptRoot`, use window-level snapshots for passive inspection, and use window-relative coordinates for input. Re-run `Move-SptWindowToTargetMonitor.ps1` when the launcher creates a new game-client window.
 
-Computer Use window snapshots can inspect an occluded window without focus. Click, key, drag, and scroll actions still activate SPT and inject input into the shared Windows desktop. Cooperative mode waits for user inactivity, restores focus/cursor when untouched, and stops on user focus changes; it is not input isolation. Recommend a VM, separate interactive Windows session, or another machine for truly simultaneous keyboard/mouse work.
+Computer Use window snapshots can inspect an occluded window without focus. Click, key, drag, and scroll actions still activate SPT and inject input into the shared Windows desktop. Cooperative mode waits for user inactivity, restores focus/cursor when untouched, records and defers interrupted focus-only handoffs, and stops on interference during clicks, keys, or movement; it is not input isolation. Recommend a VM, separate interactive Windows session, or another machine for truly simultaneous keyboard/mouse work.
 
 ## 6. Script-based vision test workflow
 
@@ -64,11 +64,11 @@ Each run creates `run.json`, `timeline.jsonl`, `analysis.md`, `analysis.json`, `
 
 ## 9. Input-control limits
 
-Input is allowed only when the target window is foreground, owned by an allowed process, and contained by the configured target monitor. Text input is blocked unless `AllowTextInput=true`. Clipboard operations are disabled. In cooperative mode, wait for `UserIdleSecondsBeforeInput`, stop after `MaxUserIdleWaitSeconds`, and stop if the user changes focus during an action. Stop at `MaxInputActions`, `ScenarioMaxSeconds`, emergency hotkey/file, or any safety violation.
+Input is allowed only when the target window is foreground, owned by an allowed process, and contained by the configured target monitor. Text input is blocked unless `AllowTextInput=true`. Clipboard operations are disabled. In cooperative mode, wait for `UserIdleSecondsBeforeInput`, stop after `MaxUserIdleWaitSeconds`, defer an interrupted focus-only handoff, and stop if the user changes focus or input during a click, key, or movement action. Stop at `MaxInputActions`, `ScenarioMaxSeconds`, emergency hotkey/file, or any safety violation.
 
 ## 10. Raid automation policy
 
-Do not automatically enter Raid by default. Prefer `manual-raid-movement-test` until the UI has been calibrated. When the user explicitly wants full automation, use `auto-offline-raid-smoke-test` or `Start-SptVisionTest.ps1 -AutoRaid`; this requires `AllowClientLaunch=true`, `AllowComputerUse=true`, `AllowKeyboardMouseInput=true`, and `AllowRaidAutomation=true`. For lower-risk map-walk testing, use `auto-offline-raid-no-ai-smoke-test` or `Start-SptVisionTest.ps1 -AutoRaidNoAi`, which selects `AI数量: 无`, disables bosses, captures verification evidence, and enters the local offline Raid.
+Do not automatically enter Raid by default. Prefer `manual-raid-movement-test` until the UI has been calibrated. When the user explicitly wants full automation, use `auto-offline-raid-smoke-test` or `Start-SptVisionTest.ps1 -AutoRaid`; this requires `AllowClientLaunch=true`, `AllowComputerUse=true`, `AllowKeyboardMouseInput=true`, and `AllowRaidAutomation=true`. For lower-risk map-walk testing, use `auto-offline-raid-no-ai-smoke-test` or `Start-SptVisionTest.ps1 -AutoRaidNoAi`, which selects AI amount `None`, captures settings and in-Raid zero-counter evidence, and enters the local offline Raid.
 
 ## 11. Debug loop
 

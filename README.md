@@ -11,7 +11,7 @@ This project is not affiliated with Battlestate Games or the SPT project. It doe
 
 - Server-only startup, readiness checks, log collection, and error analysis.
 - A normal local offline Raid scenario.
-- A lower-risk local offline Raid scenario that sets AI amount to none and disables bosses.
+- A lower-risk local offline Raid scenario that sets AI amount to none and verifies zero AI counters in Raid.
 - A versioned JSON interface for user-defined, allowlisted UI actions.
 - Target-monitor discovery, window placement, containment checks, and cooperative desktop input.
 - A Computer Use session mode for window-level screenshots and interactive Codex debugging.
@@ -107,7 +107,7 @@ After the launcher starts the game and a new client window appears, re-apply tar
   -ConfigPath .\config\spt-vision-config.json
 ```
 
-Computer Use can inspect an occluded SPT window through window-level capture without taking focus. Every click or key action still activates that window and uses the shared Windows input desktop. Cooperative mode waits for a user-input quiet period, stops if focus changes during an action, and restores the previous focus and cursor only when the user has not intervened.
+Computer Use can inspect an occluded SPT window through window-level capture without taking focus. Every click or key action still activates that window and uses the shared Windows input desktop. Cooperative mode waits for a user-input quiet period, records and defers an interrupted focus-only handoff, stops if focus or input changes during a click, key, or movement action, and restores the previous focus and cursor only when the user has not intervened.
 
 This is best-effort coexistence, not input isolation. For uninterrupted work on the other displays while an automated Raid continuously uses keyboard and mouse, run SPT in a VM, a separate Windows session with its own interactive desktop, or another machine. See [Multi-Monitor Mode](docs/MULTI_MONITOR.md).
 
@@ -121,7 +121,7 @@ Normal local offline Raid:
   -AutoRaid
 ```
 
-Local offline Raid with AI amount set to none and bosses disabled:
+Local offline Raid with AI amount set to none:
 
 ```powershell
 .\scripts\Start-SptVisionTest.ps1 `
@@ -129,7 +129,7 @@ Local offline Raid with AI amount set to none and bosses disabled:
   -AutoRaidNoAi
 ```
 
-The no-AI route was calibrated on SPT 4.0.13, Chinese UI, 2048x1152, where the in-Raid HUD reported `Scav:0 PMC:0 Boss:0`. Percentage coordinates may need recalibration after any resolution, language, UI, game-version, or mod change.
+The no-AI route was calibrated on SPT 4.0.13, Chinese UI, at 16:9 resolutions including 2560x1440. Selecting AI amount `None` disables the dependent spawn controls; the scenario does not click their grayed checkboxes. The verified in-Raid HUD reported `Scav:0 PMC:0 Boss:0`. Percentage coordinates may need recalibration after any aspect-ratio, language, UI, game-version, or mod change.
 
 Both commands require all relevant local config permissions. They remain local/offline-only and never authorize official EFT interaction.
 

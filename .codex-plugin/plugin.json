@@ -1,6 +1,6 @@
 {
   "name": "spt-vision-tester",
-  "version": "0.3.0+codex.20260710182714",
+  "version": "0.3.1+codex.20260710190315",
   "description": "Local-only SPT offline UI tests with target-monitor Computer Use and validated scenarios.",
   "author": {
     "name": "yasneg616"
