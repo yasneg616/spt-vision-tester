@@ -3,7 +3,7 @@
 `spt-vision-tester` is a Codex plugin for repeatable visual smoke tests of a configured local SPT/EFT offline mod installation. It starts only configured SPT components, runs bounded UI scenarios, captures screenshots, collects logs, analyzes likely failures, and stops only processes it recorded.
 
 > [!CAUTION]
-> This project is exclusively for local SPT offline testing. Never point it at official Escape from Tarkov, Battlestate Launcher, BattlEye, an online session, or account/login/payment screens. UI scenarios take over the foreground Windows desktop; review every scenario before running it and do not use the computer during automation.
+> This project is exclusively for local SPT offline testing. Never point it at official Escape from Tarkov, Battlestate Launcher, BattlEye, an online session, or account/login/payment screens. Multi-monitor placement limits where the SPT window may appear, but Windows keyboard focus and mouse input are still shared across every display.
 
 This project is not affiliated with Battlestate Games or the SPT project. It does not modify original game files and must not be used to delete profiles, saves, configs, cache, logs, or mods.
 
@@ -13,6 +13,8 @@ This project is not affiliated with Battlestate Games or the SPT project. It doe
 - A normal local offline Raid scenario.
 - A lower-risk local offline Raid scenario that sets AI amount to none and disables bosses.
 - A versioned JSON interface for user-defined, allowlisted UI actions.
+- Target-monitor discovery, window placement, containment checks, and cooperative desktop input.
+- A Computer Use session mode for window-level screenshots and interactive Codex debugging.
 - Per-run screenshots, timeline, log manifest, `analysis.md`, and `analysis.json`.
 - PID-and-executable identity checks so stop operations target only recorded processes.
 
@@ -52,6 +54,26 @@ Client and desktop automation are disabled by default. Enable only the capabilit
 
 `AllowRaidAutomation` is required only for automated Raid navigation. Keep `AllowTextInput=false`; custom scenarios do not expose text or clipboard actions.
 
+Optional monitor policy is disabled by default:
+
+```json
+{
+  "TargetMonitorIndex": 2,
+  "TargetMonitorDeviceName": "\\\\.\\DISPLAY1",
+  "MoveTargetWindowToMonitor": true,
+  "RequireTargetWindowOnMonitor": true,
+  "TargetMonitorMinCoverage": 0.95,
+  "TargetWindowPlacement": "preserve",
+  "CooperativeDesktopMode": true,
+  "UserIdleSecondsBeforeInput": 1.5,
+  "MaxUserIdleWaitSeconds": 30.0,
+  "RestoreUserFocusAfterInput": true,
+  "RestoreCursorAfterInput": true
+}
+```
+
+Do not copy a device name blindly. Enumerate the current machine first; index `1` is always the primary monitor, followed by the remaining connected monitors.
+
 ## Start with server-only
 
 Run this after code changes and before any client test:
@@ -61,6 +83,33 @@ Run this after code changes and before any client test:
   -ConfigPath .\config\spt-vision-config.json `
   -ServerOnly -CollectLogs -AnalyzeLogs
 ```
+
+## Multi-monitor Computer Use
+
+List connected displays without launching SPT:
+
+```powershell
+.\scripts\Get-SptVisionMonitors.ps1
+```
+
+Start the local server and configured launcher, wait for its window, and place it on the configured target monitor without sending UI input:
+
+```powershell
+.\scripts\Start-SptVisionTest.ps1 `
+  -ConfigPath .\config\spt-vision-config.json `
+  -ComputerUseSession -CollectLogs -AnalyzeLogs
+```
+
+After the launcher starts the game and a new client window appears, re-apply target placement:
+
+```powershell
+.\scripts\Move-SptWindowToTargetMonitor.ps1 `
+  -ConfigPath .\config\spt-vision-config.json
+```
+
+Computer Use can inspect an occluded SPT window through window-level capture without taking focus. Every click or key action still activates that window and uses the shared Windows input desktop. Cooperative mode waits for a user-input quiet period, stops if focus changes during an action, and restores the previous focus and cursor only when the user has not intervened.
+
+This is best-effort coexistence, not input isolation. For uninterrupted work on the other displays while an automated Raid continuously uses keyboard and mouse, run SPT in a VM, a separate Windows session with its own interactive desktop, or another machine. See [Multi-Monitor Mode](docs/MULTI_MONITOR.md).
 
 ## Built-in Raid scenarios
 
@@ -145,6 +194,9 @@ Screenshots and logs can contain private screen content, usernames, mod names, p
 - `ServerUrl` is unreachable before `StartupTimeoutSeconds`.
 - Required client, Computer Use, keyboard/mouse, or Raid permissions are false.
 - The foreground window is not owned by an allowed local SPT process.
+- The configured monitor index and device name no longer identify the same display.
+- The SPT window cannot reach the required target-monitor coverage.
+- User input remains active longer than `MaxUserIdleWaitSeconds` in cooperative mode.
 - UI coordinates no longer match the current resolution, language, or mod layout.
 - A denied official launcher, BattlEye, browser, or unrelated process is detected.
 - The scenario exceeds its time/input budget or the emergency stop file exists.
@@ -158,3 +210,4 @@ Screenshots and logs can contain private screen content, usernames, mod names, p
 - No arbitrary command execution through scenario JSON.
 - No global process-name termination.
 - No hardcoded private SPT paths.
+- No claim of per-monitor keyboard or mouse isolation on one Windows desktop.

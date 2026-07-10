@@ -1,25 +1,27 @@
 {
   "name": "spt-vision-tester",
-  "version": "0.2.0+codex.20260710092740",
-  "description": "Local-only SPT offline UI tests with built-in Raid flows and validated custom action scenarios.",
+  "version": "0.3.0+codex.20260710182714",
+  "description": "Local-only SPT offline UI tests with target-monitor Computer Use and validated scenarios.",
   "author": {
     "name": "yasneg616"
   },
   "skills": "./skills/",
   "interface": {
     "displayName": "SPT Vision Tester",
-    "shortDescription": "Run bounded local SPT offline UI tests.",
-    "longDescription": "SPT Vision Tester launches configured local SPT components, runs normal, no-AI, or validated custom action scenarios, captures screenshots, collects logs, and stops only recorded processes.",
+    "shortDescription": "Debug local SPT on a target monitor.",
+    "longDescription": "SPT Vision Tester launches configured local SPT components, binds windows to a selected monitor, supports Computer Use sessions and bounded scenarios, captures evidence, and stops only recorded processes.",
     "developerName": "yasneg616",
     "category": "Developer tools",
     "capabilities": [
       "local_scripts",
       "computer_use",
+      "multi_monitor_window_binding",
+      "cooperative_desktop_control",
       "screenshots",
       "validated_custom_scenarios",
       "game_mod_debugging",
       "log_analysis"
     ],
-    "defaultPrompt": "Use spt-vision-tester for a local SPT offline visual smoke test."
+    "defaultPrompt": "Use spt-vision-tester for a target-monitor local SPT offline visual test."
   }
 }

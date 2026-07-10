@@ -11,7 +11,8 @@ param(
     [switch]$CollectLogs,
     [switch]$AnalyzeLogs,
     [switch]$AutoRaid,
-    [switch]$AutoRaidNoAi
+    [switch]$AutoRaidNoAi,
+    [switch]$ComputerUseSession
 )
 
 $ErrorActionPreference = "Stop"
@@ -26,6 +27,10 @@ if ($AutoRaid -and $AutoRaidNoAi) {
     throw "Choose only one built-in raid mode: -AutoRaid or -AutoRaidNoAi."
 }
 
+if ($ComputerUseSession -and ($ServerOnly -or $ScenarioPath -or $CustomScenarioPath -or $AutoRaid -or $AutoRaidNoAi)) {
+    throw "-ComputerUseSession cannot be combined with server-only, scenario, or AutoRaid modes."
+}
+
 if ($CustomScenarioPath -and ($ScenarioPath -or $AutoRaid -or $AutoRaidNoAi)) {
     throw "-CustomScenarioPath cannot be combined with -ScenarioPath, -AutoRaid, or -AutoRaidNoAi."
 }
@@ -37,6 +42,11 @@ if ($CustomScenarioPath -and $ServerOnly) {
 if ($CustomScenarioPath) {
     $ScenarioPath = $CustomScenarioPath
     $RequireScenarioSchema = $true
+}
+
+if ($ComputerUseSession) {
+    $LaunchClient = $true
+    $UseComputer = $true
 }
 
 if ($AutoRaid) {
@@ -115,6 +125,7 @@ if ($LaunchClient) { $argsList += "--launch-client" }
 if ($UseComputer) { $argsList += "--use-computer" }
 if ($CollectLogs) { $argsList += "--collect-logs" }
 if ($AnalyzeLogs) { $argsList += "--analyze-logs" }
+if ($ComputerUseSession) { $argsList += "--computer-use-session" }
 
 Write-Host ""
 Write-Host "SPT vision test starting"
@@ -126,6 +137,7 @@ Write-Host "  LaunchClient: $LaunchClient"
 Write-Host "  UseComputer: $UseComputer"
 Write-Host "  AutoRaid: $AutoRaid"
 Write-Host "  AutoRaidNoAi: $AutoRaidNoAi"
+Write-Host "  ComputerUseSession: $ComputerUseSession"
 Write-Host ""
 
 & $PythonExe @argsList

@@ -110,9 +110,10 @@ def run_scenario(config: VisionConfig, scenario: dict[str, Any], artifact: Artif
                 input_ctl.focus_target_window()
             elif action == "press_sequence":
                 input_ctl.press_sequence(list(step.get("keys", [])), float(step.get("intervalSeconds", 0.2)))
-            elif action == "wait" and condition is None:
-                seconds = require_time_budget(deadline, float(step.get("seconds", 1)), "wait")
-                wait_for_seconds(config, seconds, stop_file)
+            elif action == "wait":
+                if condition is None:
+                    seconds = require_time_budget(deadline, float(step.get("seconds", 1)), "wait")
+                    wait_for_seconds(config, seconds, stop_file)
             elif action == "collect_logs":
                 collect_logs(config, artifact)
             elif action == "analyze_logs":

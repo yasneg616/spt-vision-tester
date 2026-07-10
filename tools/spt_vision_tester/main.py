@@ -3,16 +3,19 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import time
 from pathlib import Path
 
 from .artifact_writer import ArtifactWriter
 from .config import VisionConfig, load_scenario
 from .detectors import analyze_run
 from .log_collector import collect_logs
+from .monitor_manager import list_monitors, validate_monitor_configuration
 from .process_guard import ProcessGuard
 from .safety import SafetyViolation, assert_no_denied_processes
 from .scenario_runner import run_scenario
 from .scenario_validator import assert_valid_scenario, scenario_summary, validate_scenario
+from .window_finder import assert_window_on_target_monitor, find_target_window, position_target_window
 
 
 def state_file_for(config: VisionConfig) -> Path:
@@ -21,7 +24,8 @@ def state_file_for(config: VisionConfig) -> Path:
 
 def command_run(args: argparse.Namespace) -> int:
     config = VisionConfig.load(args.config)
-    scenario = load_scenario(args.scenario) if args.scenario else {"name": "server-only", "steps": []}
+    default_name = "computer-use-session" if args.computer_use_session else "server-only"
+    scenario = load_scenario(args.scenario) if args.scenario else {"name": default_name, "steps": []}
     artifact = ArtifactWriter(config.artifacts_root, scenario.get("name"))
     state_file = state_file_for(config)
     guard = ProcessGuard(config, state_file)
@@ -33,9 +37,18 @@ def command_run(args: argparse.Namespace) -> int:
         "started": [],
     }
     try:
+        if args.computer_use_session and (args.server_only or args.scenario):
+            raise SafetyViolation("Computer Use session cannot be combined with server-only or a scenario file.")
+        if not args.server_only and not args.computer_use_session and not args.scenario:
+            raise SafetyViolation("A scenario is required unless using server-only or Computer Use session mode.")
         if args.scenario:
             assert_valid_scenario(scenario, require_schema_version=args.require_scenario_schema)
             summary["scenarioValidation"] = scenario_summary(scenario)
+        if not args.server_only:
+            summary["monitorPolicy"] = validate_monitor_configuration(
+                config,
+                require_target=args.computer_use_session,
+            )
         markers = guard.validate_spt_root()
         assert_no_denied_processes(config.denied_process_names)
         server_path = config.server_path()
@@ -65,6 +78,50 @@ def command_run(args: argparse.Namespace) -> int:
                 analysis = analyze_run(config, artifact.run_dir, state_file)
                 artifact.write_analysis(analysis)
             result = {"status": "ok", "runDir": str(artifact.run_dir), "serverOnly": True}
+        elif args.computer_use_session:
+            if not args.launch_client:
+                raise SafetyViolation("Computer Use session requires client/launcher launch.")
+            if not config.allow_computer_use:
+                raise SafetyViolation("Computer Use session requires AllowComputerUse=true.")
+            deadline = time.monotonic() + config.client_boot_timeout_seconds
+            window = None
+            while time.monotonic() < deadline:
+                assert_no_denied_processes(config.denied_process_names)
+                window = find_target_window(config)
+                if window:
+                    break
+                time.sleep(1)
+            if window is None:
+                raise SafetyViolation("Timed out waiting for a targetable local SPT launcher/client window.")
+            placement = None
+            if config.move_target_window_to_monitor:
+                window, placement = position_target_window(config)
+            assert_window_on_target_monitor(config, window)
+            if args.collect_logs:
+                collect_logs(config, artifact)
+            if args.analyze_logs:
+                analysis = analyze_run(config, artifact.run_dir, state_file)
+                artifact.write_analysis(analysis)
+            result = {
+                "status": "ok",
+                "runDir": str(artifact.run_dir),
+                "computerUseSession": True,
+                "inputIsolation": False,
+                "concurrentUseWarning": (
+                    "Computer Use window snapshots can remain backgrounded, but every click/key activates the SPT window "
+                    "and uses the shared Windows input desktop."
+                ),
+                "targetWindow": {
+                    "processName": window.process_name,
+                    "processPath": window.process_path,
+                    "pid": window.pid,
+                    "bounds": [window.left, window.top, window.width, window.height],
+                    "monitorIndex": window.monitor_index,
+                    "monitorDeviceName": window.monitor_device_name,
+                    "targetMonitorCoverage": window.target_monitor_coverage,
+                },
+                "placement": placement,
+            }
         else:
             if not args.use_computer and scenario.get("requiresComputerUse"):
                 raise SafetyViolation("Scenario requires -UseComputer.")
@@ -147,6 +204,37 @@ def command_validate(args: argparse.Namespace) -> int:
     return 0 if payload["ok"] else 2
 
 
+def command_monitors(_args: argparse.Namespace) -> int:
+    monitors = [monitor.to_dict() for monitor in list_monitors()]
+    print(json.dumps({"ok": True, "monitorCount": len(monitors), "monitors": monitors}, indent=2))
+    return 0
+
+
+def command_position_window(args: argparse.Namespace) -> int:
+    config = VisionConfig.load(args.config)
+    policy = validate_monitor_configuration(config, require_target=True)
+    guard = ProcessGuard(config, state_file_for(config))
+    guard.validate_spt_root()
+    assert_no_denied_processes(config.denied_process_names)
+    window, placement = position_target_window(config)
+    payload = {
+        "ok": True,
+        "monitorPolicy": policy,
+        "window": {
+            "processName": window.process_name,
+            "processPath": window.process_path,
+            "pid": window.pid,
+            "bounds": [window.left, window.top, window.width, window.height],
+            "monitorIndex": window.monitor_index,
+            "monitorDeviceName": window.monitor_device_name,
+            "targetMonitorCoverage": window.target_monitor_coverage,
+        },
+        "placement": placement,
+    }
+    print(json.dumps(payload, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="spt-vision-tester")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -159,6 +247,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--collect-logs", action="store_true")
     run.add_argument("--analyze-logs", action="store_true")
     run.add_argument("--require-scenario-schema", action="store_true")
+    run.add_argument("--computer-use-session", action="store_true")
     run.set_defaults(func=command_run)
     collect = sub.add_parser("collect")
     collect.add_argument("--config", required=True)
@@ -175,6 +264,11 @@ def build_parser() -> argparse.ArgumentParser:
     validate.add_argument("--scenario", required=True)
     validate.add_argument("--allow-legacy-without-version", action="store_true")
     validate.set_defaults(func=command_validate)
+    monitors = sub.add_parser("monitors")
+    monitors.set_defaults(func=command_monitors)
+    position = sub.add_parser("position-window")
+    position.add_argument("--config", required=True)
+    position.set_defaults(func=command_position_window)
     return parser
 
 

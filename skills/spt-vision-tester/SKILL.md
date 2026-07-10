@@ -1,6 +1,6 @@
 ---
 name: spt-vision-tester
-description: Use this skill when the user asks Codex to visually test, launch, interact with, screenshot, keyboard-control, smoke-test, debug, or validate a local SPT/EFT offline mod installation through the game UI. It must only operate configured local SPT paths, avoid official online EFT, collect logs/screenshots, run bounded scenarios, and stop on safety violations.
+description: Use this skill when the user asks Codex to visually test, launch, interact with, screenshot, keyboard-control, smoke-test, debug, or validate a local SPT/EFT offline mod installation through the game UI, including target-monitor Computer Use sessions. It must only operate configured local SPT paths, avoid official online EFT, collect logs/screenshots, run bounded scenarios, and stop on safety violations.
 ---
 
 # SPT Vision Tester
@@ -25,23 +25,30 @@ Do not use this skill for official online Escape from Tarkov, Battlestate Launch
 - Accept only the documented action allowlist. Never add shell, arbitrary executable, path, text, or clipboard actions to scenario JSON.
 - Stop only PIDs recorded by this plugin.
 - Stop on non-SPT foreground windows, official launcher, BattlEye, browser login, account/login/payment screens, or unknown target windows.
+- When monitor binding is configured, require both monitor index and device identity to match before input.
+- Never claim that separate monitors provide separate keyboard focus or mouse input on one Windows desktop.
 
 ## 4. Required config
 
-Copy `config/spt-vision-config.example.json` to `config/spt-vision-config.json` and set `SptRoot`. Optional executable fields may be blank; the tool searches common SPT names under `SptRoot`. Client launch, Computer Use, keyboard/mouse input, text input, and raid automation are disabled by default.
+Copy `config/spt-vision-config.example.json` to `config/spt-vision-config.json` and set `SptRoot`. Optional executable fields may be blank; the tool searches common SPT names under `SptRoot`. Client launch, Computer Use, keyboard/mouse input, text input, raid automation, monitor movement, and cooperative desktop mode are disabled by default.
 
 ## 5. Computer Use guidance
 
-Computer Use takes over the foreground Windows desktop. Ask the user for explicit permission before enabling it. Keep the SPT launcher/client visible, avoid typing secrets, and stop if the foreground window changes away from the allowed SPT process.
+Use `Get-SptVisionMonitors.ps1` before selecting a display. Index `1` is the primary monitor. When both `TargetMonitorIndex` and `TargetMonitorDeviceName` are set, they must resolve to the same connected display.
+
+For direct Computer Use debugging, start with `Start-SptVisionTest.ps1 -ComputerUseSession`. Then use the Computer Use capability to select only the returned local SPT launcher/client window. Verify that its process path is under configured `SptRoot`, use window-level snapshots for passive inspection, and use window-relative coordinates for input. Re-run `Move-SptWindowToTargetMonitor.ps1` when the launcher creates a new game-client window.
+
+Computer Use window snapshots can inspect an occluded window without focus. Click, key, drag, and scroll actions still activate SPT and inject input into the shared Windows desktop. Cooperative mode waits for user inactivity, restores focus/cursor when untouched, and stops on user focus changes; it is not input isolation. Recommend a VM, separate interactive Windows session, or another machine for truly simultaneous keyboard/mouse work.
 
 ## 6. Script-based vision test workflow
 
 1. Run server-only first.
 2. Collect and analyze artifacts.
 3. Enable client launch only if needed.
-4. Enable Computer Use and keyboard/mouse input only for bounded scenarios.
-5. Run the scenario through `Start-SptVisionTest.ps1`.
-6. On failure, stop, collect artifacts, analyze logs, then decide the next code change.
+4. Enumerate and validate the target monitor before any UI input.
+5. Use `-ComputerUseSession` for interactive Codex debugging, or a reviewed scenario for scripted input.
+6. Keep passive Computer Use snapshots backgrounded; acknowledge shared input immediately before active control.
+7. On failure or user interruption, stop input, collect artifacts, analyze logs, then decide the next code change.
 
 ## 7. Scenario format
 
@@ -53,11 +60,11 @@ Run custom files with `Start-SptVisionTest.ps1 -CustomScenarioPath <file>`. Keep
 
 ## 8. Screenshot and artifact workflow
 
-Each run creates `run.json`, `timeline.jsonl`, `analysis.md`, `analysis.json`, `screenshots/`, and `logs/`. Screenshots should be captured before and after input actions. If target-window capture is unavailable, foreground screenshot fallback must record a risk note.
+Each run creates `run.json`, `timeline.jsonl`, `analysis.md`, `analysis.json`, `screenshots/`, and `logs/`. Screenshots should be captured before and after input actions. Python fallback screenshots must remain bounded to the verified SPT window. Prefer Computer Use window capture for occlusion-safe passive inspection.
 
 ## 9. Input-control limits
 
-Input is allowed only when the target window is foreground and owned by an allowed process. Text input is blocked unless `AllowTextInput=true`. Clipboard operations are disabled. Stop at `MaxInputActions`, `ScenarioMaxSeconds`, emergency hotkey/file, or any safety violation.
+Input is allowed only when the target window is foreground, owned by an allowed process, and contained by the configured target monitor. Text input is blocked unless `AllowTextInput=true`. Clipboard operations are disabled. In cooperative mode, wait for `UserIdleSecondsBeforeInput`, stop after `MaxUserIdleWaitSeconds`, and stop if the user changes focus during an action. Stop at `MaxInputActions`, `ScenarioMaxSeconds`, emergency hotkey/file, or any safety violation.
 
 ## 10. Raid automation policy
 
@@ -69,8 +76,8 @@ Run a bounded scenario, inspect screenshots/timeline/log analysis, identify the 
 
 ## 12. Output format
 
-Report the command, run directory, server status, launched PIDs, scenario validation summary, scenario result, screenshots path, logs path, likely root cause, evidence, next inspection target, safety stops, and remaining risk.
+Report the command, run directory, server status, launched PIDs, target monitor index/device/bounds, window coverage, `inputIsolation=false`, scenario validation summary, scenario result, screenshots path, logs path, likely root cause, evidence, next inspection target, safety stops, and remaining risk.
 
 ## 13. Failure handling
 
-If config is missing, SPT markers are absent, a denied process is detected, the target window cannot be verified, limits are exceeded, or logs show severe errors, stop the scenario, save artifacts, write analysis, and report the blocking reason. Never compensate by global-killing processes or continuing random input.
+If config is missing, SPT markers are absent, a denied process is detected, target monitor identity changed, target-window coverage is too low, user input remains active, focus changes during an input burst, limits are exceeded, or logs show severe errors, stop the scenario, save artifacts, write analysis, and report the blocking reason. Never compensate by selecting another monitor, global-killing processes, or continuing random input.

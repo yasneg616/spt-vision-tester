@@ -32,6 +32,17 @@ class VisionConfig:
     max_input_actions: int = 80
     screenshot_interval_ms: int = 1000
     emergency_stop_hotkey: str = "ctrl+alt+pause"
+    target_monitor_index: int = 0
+    target_monitor_device_name: str = ""
+    move_target_window_to_monitor: bool = False
+    require_target_window_on_monitor: bool = False
+    target_monitor_min_coverage: float = 0.9
+    target_window_placement: str = "preserve"
+    cooperative_desktop_mode: bool = False
+    user_idle_seconds_before_input: float = 2.0
+    max_user_idle_wait_seconds: float = 30.0
+    restore_user_focus_after_input: bool = True
+    restore_cursor_after_input: bool = True
     artifacts_root: Path = Path(".spt-vision-tester") / "runs"
     log_globs: list[str] = field(default_factory=list)
     raw: dict[str, Any] = field(default_factory=dict)
@@ -64,6 +75,17 @@ class VisionConfig:
             max_input_actions=int(data.get("MaxInputActions", 80)),
             screenshot_interval_ms=int(data.get("ScreenshotIntervalMs", 1000)),
             emergency_stop_hotkey=data.get("EmergencyStopHotkey", "ctrl+alt+pause"),
+            target_monitor_index=int(data.get("TargetMonitorIndex", 0)),
+            target_monitor_device_name=str(data.get("TargetMonitorDeviceName", "")),
+            move_target_window_to_monitor=bool(data.get("MoveTargetWindowToMonitor", False)),
+            require_target_window_on_monitor=bool(data.get("RequireTargetWindowOnMonitor", False)),
+            target_monitor_min_coverage=float(data.get("TargetMonitorMinCoverage", 0.9)),
+            target_window_placement=str(data.get("TargetWindowPlacement", "preserve")),
+            cooperative_desktop_mode=bool(data.get("CooperativeDesktopMode", False)),
+            user_idle_seconds_before_input=float(data.get("UserIdleSecondsBeforeInput", 2.0)),
+            max_user_idle_wait_seconds=float(data.get("MaxUserIdleWaitSeconds", 30.0)),
+            restore_user_focus_after_input=bool(data.get("RestoreUserFocusAfterInput", True)),
+            restore_cursor_after_input=bool(data.get("RestoreCursorAfterInput", True)),
             artifacts_root=artifacts_root.resolve(),
             log_globs=list(data.get("LogGlobs", [])),
             raw=data,

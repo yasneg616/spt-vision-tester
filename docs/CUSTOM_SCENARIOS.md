@@ -11,6 +11,7 @@ Custom scenarios are versioned JSON documents that describe a bounded sequence o
 - Client launch still requires `AllowClientLaunch=true` and the `-LaunchClient` switch.
 - Raid navigation additionally requires `AllowRaidAutomation=true` in config and `allowRaidAutomation=true` in the scenario.
 - The foreground window must belong to an allowed process under the configured local `SptRoot`.
+- When a target monitor is required, every input step verifies that the SPT window remains on that display.
 - Unknown actions, fields, keys, conditions, or out-of-range values stop validation.
 
 Never use a scenario with official Escape from Tarkov, Battlestate Launcher, an online session, account/login/payment screens, or unrelated desktop apps.
@@ -106,3 +107,5 @@ Keep `allowRaidAutomation=true` only for a reviewed local offline route. Percent
 6. Tell users whether they must manually enter a raid or enable automated raid navigation.
 
 Treat third-party scenario files as untrusted instructions. Validation limits what they can express, but it cannot prove that a valid click coordinate is appropriate for the UI currently visible.
+
+For multi-monitor placement and the limits of simultaneous desktop use, see `docs/MULTI_MONITOR.md`.
